@@ -10,9 +10,10 @@ export interface Project {
   currentPhase: ProjectPhase;
   nextStep: string;
   supportNeeded: string[];
-  responsibleTeam: string[]; // 新增：負責該專案的人員名單
+  responsibleTeam: string[];
   status: 'active' | 'on-hold' | 'completed';
   health: ProjectHealth;
+  lastUpdated?: string; // 最後更新時間
 }
 
 export interface ActivityLog {

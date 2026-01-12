@@ -2,11 +2,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { Project, ActivityLog } from "../types";
 
-// 初始化 Gemini API，API_KEY 會由 Vercel 的 Environment Variables 注入
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.warn("Gemini API Key 尚未設定，請在 Vercel 環境變數中配置 API_KEY。");
+    console.warn("API_KEY 遺失。");
   }
   return new GoogleGenAI({ apiKey: apiKey || "" });
 };
@@ -14,13 +13,14 @@ const getAiClient = () => {
 export const getAIBriefing = async (projects: Project[], logs: ActivityLog[]) => {
   const ai = getAiClient();
   const prompt = `
-    你現在是「成鼎電工」的戰略室 AI 顧問。
-    請根據以下目前的專案狀態與日誌提供簡短的「指揮官簡報」。
+    角色：成鼎電工戰略室 AI 指揮顧問 (Tactical AI Advisor)。
+    任務：分析目前的工程部署動態並提供 3 點極具行動力、簡明扼要的「戰略指令」。
     
-    專案狀況: ${JSON.stringify(projects)}
-    近期動態: ${JSON.stringify(logs.slice(0, 5))}
+    當前部署數據: ${JSON.stringify(projects)}
+    近期作戰紀錄: ${JSON.stringify(logs.slice(0, 5))}
     
-    請提供 3 點具備行動導向的建議，語氣要專業、嚴謹且有工程效率感。使用正體中文。
+    語氣要求：極度專業、軍事化、充滿工程效率、不廢話。使用正體中文。
+    每點不超過 30 字。
   `;
 
   try {
@@ -28,30 +28,30 @@ export const getAIBriefing = async (projects: Project[], logs: ActivityLog[]) =>
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: { 
-        maxOutputTokens: 300,
-        temperature: 0.7 
+        maxOutputTokens: 250,
+        temperature: 0.5 
       }
     });
-    return response.text || "目前戰報系統分析中...";
+    return response.text || "正在連線情報節點...";
   } catch (error) {
-    console.error("Gemini Briefing Error:", error);
-    return "情報連線暫時中斷，請確認 API Key 配置或稍後再試。";
+    return "情報連線異常。";
   }
 };
 
 export const getDailySummary = async (logs: ActivityLog[]) => {
   const ai = getAiClient();
   const prompt = `
-    你現在是「成鼎電工」的資深管理秘書。
-    請根據今日的施工日誌：
-    ${JSON.stringify(logs)}
+    角色：戰略室參謀長。
+    任務：彙整今日施工日誌，生成一份高層專用的「戰果摘要」。
     
-    為管理層生成一份「今日施工成果摘要」：
-    1. 哪些專案有具體進展？
-    2. 是否有緊急缺料或待處理的人力短缺？
-    3. 明日重點關注事項。
+    原始數據: ${JSON.stringify(logs)}
     
-    字數控制在 200 字以內，使用專業簡潔的正體中文。
+    摘要結構：
+    1. 戰術推進：列出有顯著進度的專案。
+    2. 威脅評估：指出缺料或人力短缺。
+    3. 下階段指令：明早核心任務。
+    
+    限制：總字數 150 字內，使用專業精鍊的正體中文。
   `;
 
   try {
@@ -59,13 +59,12 @@ export const getDailySummary = async (logs: ActivityLog[]) => {
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: { 
-        maxOutputTokens: 500,
-        temperature: 0.7 
+        maxOutputTokens: 400,
+        temperature: 0.4 
       }
     });
-    return response.text || "尚無足夠數據生成摘要。";
+    return response.text || "尚未收到完整數據。";
   } catch (error) {
-    console.error("Gemini Summary Error:", error);
-    return "無法生成摘要，請檢查日誌數據完整性。";
+    return "報告產出失敗。";
   }
 };
